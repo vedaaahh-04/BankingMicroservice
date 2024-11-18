@@ -11,6 +11,11 @@
           - lsb-release
         state: present
 
+    - name: Install libcgroup dependency for Docker
+      dnf:
+        name: libcgroup
+        state: present
+
     - name: Set up Docker repository for CentOS/RHEL
       copy:
         content: |
