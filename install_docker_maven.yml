@@ -1,48 +1,104 @@
 ---
-- name: Install Docker, Docker Compose, and Maven on Rocky Linux 9
-  hosts: Client1  # Ensure this matches your inventory group
-  become: yes
+- name: Install Docker and Docker Compose
+  hosts: Client1 # Running on Ansible controller
+  become: yes  # Ensure tasks run with sudo
+  remote_user: azureuser  # Specify the remote user (change as necessary)
+ 
   tasks:
-    - name: Install dependencies for Docker and Maven
-      dnf:
+    - name: Install required dependencies (Debian-based)
+      package:
         name:
+          - apt-transport-https
+          - ca-certificates
           - curl
           - gnupg
           - lsb-release
         state: present
-
-    - name: Enable EPEL repository
-      dnf:
-        name: epel-release
+      when: ansible_os_family == "Debian"  # For Debian-based distros like Ubuntu
+ 
+    - name: Install Docker dependencies (RHEL/CentOS/Fedora)
+      package:
+        name:
+          - yum-utils
+          - device-mapper-persistent-data
+          - lvm2
         state: present
-
-    - name: Set up Docker repository for CentOS/RHEL
-      copy:
-        content: |
-          [docker-ce-stable]
-          name=Docker CE Stable - $basearch
-          baseurl=https://download.docker.com/linux/centos/7/x86_64/stable
-          enabled=1
-          gpgcheck=1
-          gpgkey=https://download.docker.com/linux/centos/gpg
-        dest: /etc/yum.repos.d/docker-ce.repo
-
-    - name: Install Docker
-      dnf:
+      when: ansible_os_family == "RedHat"  # For RHEL/CentOS/Fedora
+ 
+    - name: Add Docker repository (Debian-based)
+      get_url:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        dest: /etc/apt/trusted.gpg.d/docker.asc
+      when: ansible_os_family == "Debian"
+ 
+    - name: Add Docker repository (RHEL/CentOS)
+      command: >
+        yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+      when: ansible_os_family == "RedHat"
+ 
+    - name: Install Docker (Debian-based)
+      apt:
         name: docker-ce
         state: present
-
+        update_cache: yes
+      when: ansible_os_family == "Debian"
+ 
+    - name: Install Docker (RHEL/CentOS)
+      yum:
+        name: docker-ce
+        state: present
+      when: ansible_os_family == "RedHat"
+ 
     - name: Start and enable Docker service
       systemd:
         name: docker
-        enabled: yes
         state: started
-
-    - name: Install Docker Compose
+        enabled: yes
+ 
+    - name: Add user to docker group (optional, if you want to avoid using `sudo` for docker commands)
+      user:
+        name: "azureuser"  # Use the `ansible_user` variable
+        groups: docker      # Specify the groups parameter
+        append: yes
+ 
+    - name: Get system's OS and Architecture for Docker Compose URL
+      shell: |
+        echo "$(uname -s)-$(uname -m)"
+      register: system_info
+ 
+    - name: Install Docker Compose (latest version)
       get_url:
-        url: "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)"
+        url: "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-{{ system_info.stdout }}"
         dest: /usr/local/bin/docker-compose
         mode: 'u+x'
+      register: docker_compose_install
+ 
+    - name: Check if Docker Compose is installed
+      stat:
+        path: /usr/local/bin/docker-compose
+      register: docker_compose_stat
+ 
+    - name: Fail if Docker Compose was not installed
+      fail:
+        msg: "Docker Compose installation failed!"
+      when: docker_compose_stat.stat.exists == false
+ 
+    - name: Verify Docker installation
+      command: docker --version
+ 
+    - name: Verify Docker Compose installation
+      command: /usr/local/bin/docker-compose --version  # Ensure the correct path is used
+      register: docker_compose_version
+      failed_when: docker_compose_version.rc != 0
+ 
+    - name: Display Docker Compose version
+      debug:
+        msg: "Docker Compose version: {{ docker_compose_version.stdout }}"
+
+    - name: Update the package index
+      dnf:
+        name: '*'
+        state: latest
 
     - name: Install Maven
       dnf:
@@ -50,4 +106,14 @@
         state: present
 
     - name: Verify Maven installation
-      command: mvn -v
+      command: mvn -version
+      register: maven_version
+
+    - name: Fail if Maven installation failed
+      fail:
+        msg: "Maven installation failed!"
+      when: maven_version.rc != 0
+
+    - name: Display Maven version
+      debug:
+        msg: "Maven version: {{ maven_version.stdout }}"
