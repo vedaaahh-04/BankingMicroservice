@@ -1,6 +1,6 @@
 ---
 - name: Install Docker, Docker Compose, and Maven on Rocky Linux 9
-  hosts: your_target_hosts
+  hosts: Client1
   become: yes
   tasks:
   
