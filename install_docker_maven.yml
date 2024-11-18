@@ -1,6 +1,6 @@
 ---
 - name: Install Docker, Docker Compose, and Maven on Rocky Linux 9
-  hosts: servers  # Make sure this matches the group name in your inventory
+  hosts: Client1  # Make sure this matches the group name in your inventory
   become: yes
   tasks:
     - name: Install dependencies for Docker
