@@ -1,6 +1,6 @@
 ---
 - name: Install Docker, Docker Compose, and Maven on Rocky Linux 9
-  hosts: Client1  # Make sure this matches the group name in your inventory
+  hosts: Client1  # Ensure this matches your inventory group
   become: yes
   tasks:
     - name: Install dependencies for Docker
@@ -11,16 +11,17 @@
           - lsb-release
         state: present
 
-    - name: Download Docker installation script
-      get_url:
-        url: https://get.docker.com
-        dest: /tmp/install-docker.sh
-        mode: 'u+x'
+    - name: Set up Docker repository
+      dnf:
+        name: "https://download.docker.com/linux/centos/docker-ce.repo"
+        state: present
 
-    - name: Run Docker installation script
-      command: /bin/bash /tmp/install-docker.sh
+    - name: Install Docker
+      dnf:
+        name: docker-ce
+        state: present
 
-    - name: Enable Docker service to start on boot
+    - name: Start and enable Docker service
       systemd:
         name: docker
         enabled: yes
@@ -28,7 +29,7 @@
 
     - name: Install Docker Compose
       get_url:
-        url: https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)
+        url: "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)"
         dest: /usr/local/bin/docker-compose
         mode: 'u+x'
 
