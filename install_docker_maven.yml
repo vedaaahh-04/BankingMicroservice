@@ -16,11 +16,6 @@
         name: epel-release
         state: present
 
-    - name: Install libcgroup dependency for Docker (from EPEL)
-      dnf:
-        name: libcgroup
-        state: present
-
     - name: Set up Docker repository for CentOS/RHEL
       copy:
         content: |
