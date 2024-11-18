@@ -1,8 +1,8 @@
-version: '3.7'
+version: '3.8'
 
 services:
   banking-microservice:
-    image: banking-microservice:1.0
+    image: banking-microservice:latest
     build:
       context: .  # Build from the current directory
     ports:

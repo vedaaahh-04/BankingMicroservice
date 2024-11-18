@@ -1,6 +1,6 @@
 ---
 - name: Install Docker and Docker Compose
-  hosts: server  # Running on Ansible controller
+  hosts: Ansi-con  # Running on Ansible controller
   become: yes  # Ensure tasks run with sudo
   remote_user: azureuser  # Specify the remote user (change as necessary)
  

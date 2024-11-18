@@ -1,6 +1,6 @@
 ---
 - name: Install and configure Apache HTTP Server
-  hosts: client  # Replace with your target host or group
+  hosts: Client1  # Replace with your target host or group
   become: yes  # To execute commands as root
  
   tasks:
