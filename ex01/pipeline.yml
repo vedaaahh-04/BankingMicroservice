@@ -33,6 +33,7 @@
     - name: Print Docker service status
       debug:
         var: docker_status.stdout_lines
+        
     - name: Install Maven
       dnf:
         name: maven
