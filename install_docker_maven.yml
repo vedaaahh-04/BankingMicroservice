@@ -1,6 +1,6 @@
 ---
 - name: Install Docker, Docker Compose, and Maven on Rocky Linux 9
-  hosts: Client1  # Make sure this matches the group name in your inventory
+  hosts: servers  # Make sure this matches the group name in your inventory
   become: yes
   tasks:
     - name: Install dependencies for Docker
@@ -13,7 +13,7 @@
 
     - name: Download Docker installation script
       get_url:
-        url: https://get.docker.com -o /tmp/install-docker.sh
+        url: https://get.docker.com
         dest: /tmp/install-docker.sh
         mode: 'u+x'
 
