@@ -3,7 +3,7 @@
   hosts: Client1  # Ensure this matches your inventory group
   become: yes
   tasks:
-    - name: Install dependencies for Docker
+    - name: Install dependencies for Docker and Maven
       dnf:
         name:
           - curl
@@ -11,10 +11,16 @@
           - lsb-release
         state: present
 
-    - name: Set up Docker repository
-      dnf:
-        name: "https://download.docker.com/linux/centos/docker-ce.repo"
-        state: present
+    - name: Set up Docker repository for CentOS/RHEL
+      copy:
+        content: |
+          [docker-ce-stable]
+          name=Docker CE Stable - $basearch
+          baseurl=https://download.docker.com/linux/centos/7/x86_64/stable
+          enabled=1
+          gpgcheck=1
+          gpgkey=https://download.docker.com/linux/centos/gpg
+        dest: /etc/yum.repos.d/docker-ce.repo
 
     - name: Install Docker
       dnf:
