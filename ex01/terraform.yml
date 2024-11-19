@@ -1,33 +1,31 @@
 ---
-- name: Install Terraform on Rocky Linux
+- name: Install Terraform on RHEL-based system
   hosts: Client1
-  become: true  # Ensure this is set
+  become: yes
   tasks:
-    # Step 1: Install dependencies (curl, gnupg)
-    - name: Install curl and gnupg
-      dnf:
-        name:
-          - curl
-          - gnupg
+    - name: Install yum-utils
+      yum:
+        name: yum-utils
         state: present
-
-    # Step 2: Add the HashiCorp repository
-    - name: Add HashiCorp repo for Rocky Linux
-      dnf:
-        name: "https://rpm.releases.hashicorp.com/RHEL/$release/hashicorp.repo"
-        state: present
-
-    # Step 3: Install Terraform
+ 
+    - name: Add HashiCorp repository
+      command: >
+        yum-config-manager --add-repo https://rpm.releases.hashicorp.com/RHEL/hashicorp.repo
+      args:
+        creates: /etc/yum.repos.d/hashicorp.repo  # Ensures idempotency by checking if the repo file exists
+ 
     - name: Install Terraform
-      dnf:
+      yum:
         name: terraform
         state: present
-
-    # Step 4: Verify Terraform installation
+ 
     - name: Verify Terraform installation
       command: terraform --version
-      register: terraform_version
-
-    - name: Show Terraform version
+      register: terraform_version_output
+      ignore_errors: no
+ 
+    - name: Display Terraform version
       debug:
-        msg: "Terraform installed version: {{ terraform_version.stdout }}"
+        msg: "Installed Terraform version: {{ terraform_version_output.stdout }}"
+ 
+has context menu
