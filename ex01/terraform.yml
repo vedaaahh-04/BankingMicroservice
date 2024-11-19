@@ -1,7 +1,7 @@
 ---
 - name: Install Terraform on Rocky Linux
   hosts: Client1
-  become: yes
+  become: true  # Ensure this is set
   tasks:
     # Step 1: Install dependencies (curl, gnupg)
     - name: Install curl and gnupg
@@ -14,7 +14,7 @@
     # Step 2: Add the HashiCorp repository
     - name: Add HashiCorp repo for Rocky Linux
       dnf:
-        name: https://rpm.releases.hashicorp.com/RHEL/$release/hashicorp.repo
+        name: "https://rpm.releases.hashicorp.com/RHEL/$release/hashicorp.repo"
         state: present
 
     # Step 3: Install Terraform
