@@ -15,6 +15,6 @@ public class App {
 
     @GetMapping("/hello")
     public String hello() {
-        return "Hello veda vallika";
+        return "Hello! veda vallika BankingMicroservices";
     }
 }
