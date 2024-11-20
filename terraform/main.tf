@@ -45,7 +45,7 @@ resource "azurerm_network_security_group" "nsg" {
 }
 
 # Public IP Address
-resource "azurerm_public_ip" "vm_public_ip" {
+resource "azurerm_public_ip" "vm_public_ipaddr" {
   name                = "vm-public-ip-S3"
   location            = var.location
   resource_group_name = var.resource_group_name
