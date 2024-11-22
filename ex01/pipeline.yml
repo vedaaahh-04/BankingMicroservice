@@ -1,6 +1,6 @@
 ---
 - name: Install Docker on CentOS
-  hosts:  10.10.0.4
+  hosts: Client1
   become: true
   tasks:
     - name: Add Docker repository
