@@ -127,7 +127,7 @@ resource "azurerm_linux_virtual_machine" "linux_vm" {
 
 # Update the package repository
 # echo "Updating package repository..."
-# sudo dnf -y update
+ sudo dnf -y update
 
 # Install epel-release (to enable additional repositories for packages like Ansible)
 echo "Installing epel-release..."
