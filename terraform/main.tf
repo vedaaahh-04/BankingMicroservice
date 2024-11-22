@@ -129,21 +129,15 @@ resource "azurerm_linux_virtual_machine" "linux_vm" {
 # echo "Updating package repository..."
  sudo dnf -y update
 
-# Install epel-release (to enable additional repositories for packages like Ansible)
-echo "Installing epel-release..."
-sudo dnf -y install epel-release
+#script to install java 17
+sudo dnf install java-17-openjdk -y
 
-# Install Ansible
-echo "Installing Ansible..."
-sudo dnf -y install ansible
+#script to install git 
+sudo dnf install git -y
 
-# Install Git
-echo "Installing Git..."
-sudo dnf -y install git
-
-# Install JDK 17
-echo "Installing OpenJDK 17..."
-sudo dnf -y install java-17-openjdk-devel
+#script to install ansible
+sudo dnf install epel-release -y
+sudo dnf install ansible -y
 
 # Add Docker repository
 echo "Adding Docker repository..."
