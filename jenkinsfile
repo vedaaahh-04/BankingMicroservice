@@ -1,0 +1,139 @@
+pipeline {
+    agent none
+ 
+    stages {
+        stage('Cleanup') {
+            agent { label 'master' }
+            steps {
+                script {
+                 deleteDir()  // Deletes the workspace before running the build
+                }
+            }
+        }
+        
+        stage("SCM Checkout") {
+            agent { label 'master' }
+            steps {
+                git branch: 'main', 
+                    credentialsId: 'localhost', 
+                    url: 'git@github.com:vedaaahh-04/BankingMicroservice.git/'
+            }
+        }
+        stage('Install epel-release and Ansible') {
+            agent { label 'master' }
+            steps {
+                script {
+                    // Install epel-release and Ansible
+                    sh '''
+                    sudo dnf -y update
+                    sudo dnf -y install epel-release
+                    sudo dnf -y install ansible
+                    ansible --version
+                    '''
+                }
+            }
+        }
+
+        stage('Capture IP Address and Edit Inventory File') {
+            agent { label 'master' }
+            steps {
+                script {
+                    // Capture the machine's IP address using 'ip a'
+                    def ipAddress = sh(script: "ip a show eth0 | grep inet | grep -v inet6 | awk '{print \$2}' | cut -d'/' -f1 | head -n 1", returnStdout: true).trim()
+
+                    // Define the inventory file path (adjust as necessary)
+                    def inventoryFile = '/etc/ansible/hosts'
+
+                    // Check if the IP address already exists in the inventory file
+                    def existingIpCheck = sh(script: "grep -q '${ipAddress}' ${inventoryFile} && echo 'found' || echo 'not_found'", returnStdout: true).trim()
+
+                    if (existingIpCheck == 'not_found') {
+                        // If IP is not found, add it to the inventory file
+                        sh """
+                        echo '[Client1]' | sudo tee -a ${inventoryFile}
+                        echo '${ipAddress}' | sudo tee -a ${inventoryFile}
+                        """
+
+                        // Verify the added lines in the inventory file
+                        sh 'cat /etc/ansible/hosts'
+                    } else {
+                        echo "IP address ${ipAddress} already exists in the inventory. Skipping update."
+                    }
+                }
+            }
+        }
+        stage('Run Ansible Playbook') {
+            agent { label 'master' }
+            steps {
+                script {
+                    // Run the Ansible playbook to install Terraform
+                    sh 'ansible-playbook ./ex01/terraform.yml'
+                }
+            }
+        }
+        stage('Terraform Init and Plan') {
+            agent { label 'master' }
+            steps {
+                script {
+                    // Change to the terraform directory
+                    dir('terraform') {
+                        // Run terraform init
+                        sh 'terraform init -force-copy'
+                        sh 'terraform plan'
+                        // Run terraform apply
+                        sh 'terraform apply -auto-approve'
+                    
+                    }
+                }
+            }
+        }
+        stage("SCM Checkout1") {
+            agent { label 'node2' }
+            steps {
+                git branch: 'main', credentialsId: 'node222', url: 'git@github.com:vedaaahh-04/BankingMicroservice.git'
+            }
+        }
+        stage("Run Ansible Playbook1") {
+             agent {label 'node2'}
+            steps {
+                script {
+                    // Ensure the playbook is run from the correct path
+                    sh 'ansible-playbook ./ex01/pipeline.yml'
+                }
+            }
+        }
+        stage("Maven Build") {
+             agent {label 'node2'}
+            steps {
+                script {
+                    // Running Maven build
+                    sh 'mvn clean install'
+                }
+            }
+        }
+        stage("Docker Compose Up") {
+             agent {label 'node2'}
+            steps {
+                script {
+                    // Run docker-compose to start containers in detached mode
+                    sh 'sudo docker compose -f docker-compose.yaml up -d'
+                }
+            }
+        }
+        
+        
+      /*  stage('Terraform Init and Plan1') {
+            agent {label 'master'}
+            steps {
+                script {
+                    dir('terraform') {
+                         echo "Waiting for approval...."
+                        input message: 'Do you approve this build?', 
+                          ok: 'Approve'
+                        sh 'terraform destroy -auto-approve'
+                    }
+                }
+            }
+        }*/
+    }
+}
